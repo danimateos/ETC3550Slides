@@ -1,9 +1,9 @@
 ---
-title: "ETC3550/ETC5550 Applied&nbsp;forecasting"
-author: "Ch2. Time series graphics"
-date: "OTexts.org/fpp3/"
+title: "Time Series & Forecasting"
+author: "Ch2. Time Series graphics"
+date: \today
 toc: true
-colortheme: monashwhite
+titlepage: titlepage-ie.jpg
 output:
   binb::monash:
     fig_width: 7
@@ -734,21 +734,7 @@ new_production %>% ACF(Beer) %>% autoplot()
 
 ## Autocorrelation functions
 
-\only<1>{\centering\includegraphics[width=17cm]{acf_1}}
-\only<2>{\centering\includegraphics[width=17cm]{acf_2}}
-\only<3>{\centering\includegraphics[width=17cm]{acf_3}}
-\only<4>{\centering\includegraphics[width=17cm]{acf_4}}
-\only<5>{\centering\includegraphics[width=17cm]{acf_5}}
-\only<6>{\centering\includegraphics[width=17cm]{acf_6}}
-\only<7>{\centering\includegraphics[width=17cm]{acf_7}}
-\only<8>{\centering\includegraphics[width=17cm]{acf_8}}
-\only<9>{\centering\includegraphics[width=17cm]{acf_9}}
-
-\vspace*{10cm}
-
-\begin{textblock}{9}(6,9.2)\fontsize{7}{9}\sf
-Artwork by @allison\_horst
-\end{textblock}
+https://twitter.com/allison_horst/status/1361545021980217345
 
 ## US retail trade employment
 \fontsize{11}{12}\sf

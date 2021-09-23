@@ -1,9 +1,9 @@
 ---
-title: "ETC3550/ETC5550 Applied&nbsp;forecasting"
+title: "Time Series & Forecasting"
 author: "Ch3. Time series decomposition"
-date: "OTexts.org/fpp3/"
+date: \today
 toc: true
-colortheme: monashwhite
+titlepage: titlepage-ie.jpg
 output:
   binb::monash:
     fig_width: 7
@@ -43,7 +43,7 @@ library(latex2exp)
 
 ```{r gdp-per-capita}
 global_economy %>%
-  filter(Country == "Australia") %>%
+  filter(Country == "United Arab Emirates") %>%
   autoplot(GDP)
 ```
 
@@ -52,7 +52,7 @@ global_economy %>%
 
 ```{r gdp-per-capita2}
 global_economy %>%
-  filter(Country == "Australia") %>%
+  filter(Country == "United Arab Emirates") %>%
   autoplot(GDP / Population)
 ```
 
@@ -70,15 +70,15 @@ print_retail <- aus_retail %>%
   group_by(Industry) %>%
   index_by(Year = year(Month)) %>%
   summarise(Turnover = sum(Turnover))
+
 aus_economy <- global_economy %>%
   filter(Code == "AUS")
+
 print_retail %>%
   left_join(aus_economy, by = "Year") %>%
   mutate(Adjusted_turnover = Turnover / CPI * 100) %>%
   pivot_longer(c(Turnover, Adjusted_turnover),
                values_to = "Turnover") %>%
-  mutate(name = factor(name,
-         levels=c("Turnover","Adjusted_turnover"))) %>%
   ggplot(aes(x = Year, y = Turnover)) +
   geom_line() +
   facet_grid(name ~ ., scales = "free_y") +
@@ -86,11 +86,39 @@ print_retail %>%
        y = "$AU")
 ```
 
+
 ## Inflation adjustments
 \fontsize{10}{10}\sf
 
 ```{r ref.label = 'retail_cpi', message=FALSE, warning=FALSE, echo=FALSE, fig.height=5}
 ```
+
+## Your turn
+\fontsize{11}{13}\sf
+
+* `aus_retail` contains data in $million AUD. Apply to the series `"Cafes, restaurants and catering services"` an inflation adjustment to see how the PPP spending has increased. Plot the resulting series (one line for all of Australia)
+
+* In those years, the Australian population has increased. Join the Australian population data from `global_economy` and calculate the PPP-adjusted spending per capita in `"Cafes, restaurants and catering services"` and `"Takeaway food services"`. 
+
+<!--
+
+```{r your_turn, message=FALSE, warning=FALSE, fig.show='hide'}
+aus_stats = global_economy %>%
+  filter(Code == "AUS") %>% 
+  select(c(CPI, Population))
+
+aus_retail %>% 
+  group_by(Industry) %>% 
+  summarise(Turnover = sum(Turnover))  %>%
+  mutate(Year = year(Month)) %>% 
+  left_join(aus_stats) %>%
+  mutate(Adjusted = 100 * Turnover / (Population * CPI)) %>%
+  filter(Industry== "Cafes, restaurants and catering services" | Industry == "Takeaway food services" ) %>%
+  autoplot()
+```
+
+-->
+
 
 ## Mathematical transformations
 \fontsize{13}{15}\sf
@@ -160,6 +188,21 @@ food %>% autoplot(-1/Turnover) +
   labs(y = "Inverse turnover")
 ```
 
+## Your turn
+
+* Plot the logarithm in base 10 of US GDP from the `global_economy` dataset. 
+
+* What's the difference between the latest value and the first value? What does it mean?
+
+<!-- 
+
+```{r}
+global_economy %>%
+  filter(Code=="USA") %>% 
+  autoplot(log10(GDP))
+```
+
+-->
 ## Box-Cox transformations
 
 Each of these transformations is close to a member of the
@@ -223,6 +266,16 @@ food %>% autoplot(box_cox(Turnover, 0.0524)) +
 * `log1p()` can also be useful for data with zeros.
 * Choosing logs is a simple way to force forecasts to be positive
 * Transformations must be reversed to obtain forecasts on the original scale. (Handled automatically by `fable`.)
+
+### Your turn
+
+* Play around with the lambda slider at [https://otexts.com/fpp3/transformations.html](https://otexts.com/fpp3/transformations.html) (near the bottom; you can search for "slider"). 
+  * How does the behavior of the transformation change between between very negative values of lambda and and very high positive values?
+  * What value represents the cutoff between these two behaviors?
+
+* Create the variable `a10_spending` that reflects the total spending in diabetic drugs (ATC2 "A10") from the `PBS` dataset. 
+  * Plot it. Do you think it needs a transformation? Which one of the ones we saw earlier (square, inverse, log) looks better intuitively?
+  * Use the `features` function in combination with `guerrero` to calculate the optimal lambda. Does it match your intuition?
 
 <!-- ## Your turn
 
@@ -540,166 +593,30 @@ us_retail_employment %>%
 * Default season `window = 13`
 * Default trend `window = nextodd(` \newline\mbox{}\hfill `ceiling((1.5*period)/(1-(1.5/s.window)))`
 
-# When things go wrong
 
-## The ABS stuff-up
+## Your turn
 
-\fullheight{abs1}
+* Let's play around with the `vic_elec` dataset. Group it by day and average `Demand` so that we can ignore the intraday seasonality. Keep only the year 2014.
 
-## The ABS stuff-up
+* Decompose it using STL and plot the `components`. What do you see?
 
-\fullheight{abs2}
+* Play with the window values for both season and trend. 
+  * Which value makes the trend more/less wiggly? 
+  * Which one makes the seasonal component change faster/slower? 
+  * Wich combination minimizes the values left in the remainder without producing absurdly looking trend/seasons?
+  
+```{r}
+daily = vic_elec %>% 
+  as_tibble() %>% 
+  group_by(Date) %>% 
+  summarise(avg_demand = mean(Demand)) %>%
+  as_tsibble(index=Date) %>% 
+  filter(year(Date) == 2014)
 
-## The ABS stuff-up
-
-\fullheight{abs3}
-
-## The ABS stuff-up
-
-\fontsize{10}{12}\sf
-
-```{r abs1, echo=FALSE}
-employed <- tsibble(
-  Time = yearmonth("1978 Feb") + 0:439,
-  Employed = c(
-    5985.7, 6040.6, 6054.2, 6038.3, 6031.3, 6036.1, 6005.4, 6024.3, 6045.9, 6033.8, 6125.4, 5971.3,
-    6050.7, 6096.2, 6087.7, 6075.6, 6095.7, 6103.9, 6078.5, 6157.8, 6164.0, 6188.8, 6257.2, 6112.9,
-    6207.2, 6278.7, 6224.9, 6273.4, 6269.9, 6314.1, 6281.4, 6360.0, 6320.2, 6342.0, 6426.6, 6253.0,
-    6356.5, 6428.1, 6426.3, 6412.4, 6413.9, 6425.3, 6393.7, 6502.7, 6445.3, 6433.3, 6506.9, 6355.5,
-    6432.4, 6497.4, 6431.6, 6440.9, 6414.3, 6425.9, 6379.3, 6443.5, 6421.1, 6366.8, 6370.1, 6172.0,
-    6263.9, 6310.3, 6254.5, 6272.8, 6266.5, 6295.0, 6241.2, 6358.2, 6336.1, 6377.5, 6456.5, 6251.4,
-    6365.4, 6503.2, 6477.6, 6489.7, 6499.0, 6528.7, 6466.1, 6579.8, 6553.2, 6576.1, 6636.0, 6452.4,
-    6595.7, 6657.4, 6588.8, 6657.9, 6659.4, 6703.4, 6675.5, 6814.7, 6771.1, 6881.9, 6910.8, 6753.6,
-    6861.9, 6961.9, 6997.9, 6979.0, 7007.7, 6991.5, 6918.5, 7040.6, 7030.4, 7034.2, 7116.8, 6902.5,
-    7022.3, 7133.4, 7109.6, 7103.5, 7128.9, 7175.6, 7092.3, 7186.5, 7177.4, 7182.2, 7330.7, 7169.4,
-    7247.3, 7397.4, 7383.4, 7354.8, 7378.3, 7383.1, 7353.3, 7503.2, 7477.3, 7508.6, 7622.9, 7423.8,
-    7566.5, 7634.6, 7678.4, 7720.8, 7711.0, 7740.8, 7715.3, 7841.6, 7806.5, 7862.4, 7935.5, 7707.7,
-    7803.0, 7874.1, 7887.9, 7908.5, 7900.3, 7919.4, 7808.0, 7905.5, 7848.9, 7826.9, 7915.5, 7641.3,
-    7708.7, 7715.4, 7717.2, 7703.7, 7678.1, 7583.0, 7620.7, 7713.2, 7638.0, 7614.9, 7712.2, 7518.9,
-    7597.2, 7646.2, 7644.1, 7631.4, 7637.3, 7668.3, 7613.4, 7709.7, 7665.7, 7587.4, 7693.4, 7533.7,
-    7531.0, 7645.7, 7572.6, 7620.5, 7627.9, 7646.5, 7589.4, 7747.6, 7738.8, 7744.9, 7842.1, 7646.8,
-    7738.6, 7824.2, 7827.4, 7857.9, 7878.4, 7966.0, 7861.7, 8054.4, 7997.2, 8003.3, 8135.5, 7928.4,
-    8049.9, 8118.1, 8174.6, 8165.2, 8205.6, 8229.0, 8165.9, 8300.4, 8232.6, 8300.3, 8395.7, 8166.7,
-    8246.6, 8280.4, 8248.0, 8297.1, 8311.7, 8332.1, 8265.9, 8373.0, 8319.4, 8314.4, 8431.4, 8235.2,
-    8291.4, 8347.5, 8343.1, 8330.2, 8345.6, 8374.9, 8250.3, 8474.0, 8405.2, 8462.1, 8540.5, 8334.7,
-    8413.0, 8460.0, 8499.9, 8482.5, 8516.8, 8541.9, 8455.2, 8653.2, 8601.0, 8554.3, 8696.5, 8477.4,
-    8556.5, 8618.9, 8631.9, 8606.5, 8673.2, 8706.7, 8603.6, 8777.1, 8755.3, 8763.7, 8900.7, 8628.2,
-    8754.4, 8830.7, 8882.2, 8865.0, 8922.0, 9020.0, 8911.6, 9061.3, 8973.1, 8912.7, 9059.6, 8834.9,
-    8920.9, 8956.0, 9023.6, 9004.6, 9021.9, 9048.9, 8971.9, 9105.9, 9058.7, 9055.6, 9177.1, 8993.4,
-    9092.3, 9128.5, 9129.5, 9134.7, 9180.8, 9194.5, 9150.3, 9303.5, 9249.1, 9286.7, 9439.7, 9281.7,
-    9372.6, 9362.1, 9365.6, 9380.1, 9370.4, 9363.9, 9327.0, 9486.1, 9447.8, 9427.7, 9573.6, 9363.8,
-    9434.5, 9506.4, 9512.0, 9533.5, 9543.3, 9553.1, 9462.1, 9668.6, 9662.2, 9652.9, 9807.8, 9634.4,
-    9744.6, 9828.3, 9856.3, 9850.8, 9896.6, 9912.3, 9870.3, 10004.6, 9949.7, 9945.0, 10074.7, 9842.7,
-    9961.1, 10048.7, 10041.0, 10082.1, 10120.8, 10170.8, 10105.8, 10299.5, 10212.4, 10201.6, 10404.3,
-    10156.1, 10277.0, 10349.2, 10362.9, 10412.0, 10436.3, 10456.8, 10406.4, 10588.8, 10520.5, 10535.0,
-    10710.1, 10524.9, 10622.9, 10677.4, 10706.2, 10690.3, 10745.0, 10761.9, 10710.4, 10854.5, 10807.4,
-    10757.3, 10915.6, 10681.0, 10776.7, 10775.2, 10792.7, 10786.8, 10770.9, 10808.8, 10707.3, 10882.1,
-    10845.2, 10829.2, 11010.9, 10809.9, 10889.2, 10928.9, 10940.1, 10957.4, 11009.3, 11030.5, 10973.8,
-    11159.4, 11129.0, 11144.5, 11295.0, 11063.7, 11146.2, 11217.0, 11186.5, 11196.2, 11221.3, 11227.5,
-    11130.7, 11321.2, 11274.0, 11240.6, 11354.8, 11159.0, 11236.2, 11332.4, 11328.3, 11389.0, 11350.6,
-    11363.7, 11259.8, 11452.6, 11401.9, 11375.0, 11518.4, 11304.0, 11424.3, 11436.3, 11482.2, 11495.6,
-    11497.8, 11486, 11369, 11547, 11499, 11472, 11571, 11354, 11493, 11562, 11589, 11595, 11602, 11590,
-    11622, 11593
-  ),
-  index = Time
-) %>%
-  mutate(
-    Month = month(Time, label = TRUE),
-    Year = year(Time)
-  ) %>%
-  select(Time, Month, Year, Employed)
+daily %>% 
+  filter(year(Date)==2014) %>% 
+  model(STL(avg_demand ~ trend(window=21) + season(window=11))) %>% 
+  components() %>% 
+  autoplot
 ```
-
-```{r abs2}
-employed
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs3, fig.height=4}
-employed %>%
-  autoplot(Employed) +
-  labs(title = "Total employed", y = "Thousands")
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs4, fig.height=4}
-employed %>%
-  filter(Year >= 2005) %>%
-  autoplot(Employed) +
-  labs(title = "Total employed", y = "Thousands")
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs5, fig.height=4}
-employed %>%
-  filter(Year >= 2005) %>%
-  gg_season(Employed, label = "right") +
-  labs(title = "Total employed", y = "Thousands")
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs6, fig.height=2}
-employed %>%
-  mutate(diff = difference(Employed)) %>%
-  filter(Month == "Sep") %>%
-  ggplot(aes(y = diff, x = 1)) +
-  geom_boxplot() + coord_flip() +
-  labs(title = "Sep - Aug: total employed", y = "Thousands") +
-  scale_x_continuous(breaks = NULL, labels = NULL)
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs7, fig.height=3.85}
-dcmp <- employed %>%
-  filter(Year >= 2005) %>%
-  model(stl = STL(Employed ~ season(window = 11), robust = TRUE))
-components(dcmp) %>% autoplot()
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs8, fig.height=3.5}
-components(dcmp) %>%
-  filter(year(Time) == 2013) %>%
-  gg_season(season_year) +
-  labs(title = "Seasonal component") +
-  guides(colour = "none")
-```
-
-## The ABS stuff-up
-
-\fontsize{9}{10}\sf
-
-```{r abs9}
-components(dcmp) %>%
-  as_tsibble() %>%
-  autoplot(season_adjust)
-```
-
-## The ABS stuff-up
-\fontsize{13}{15}\sf
-
-  *  August 2014 employment numbers higher than expected.
-  *  Supplementary survey usually conducted in August for employed people.
-  *  Most likely, some employed people were claiming to be unemployed in August to avoid supplementary questions.
-  *  Supplementary survey not run in 2014, so no motivation to lie about employment.
-  *  In previous years, seasonal adjustment fixed the problem.
-  *  The ABS has now adopted a new method to avoid the bias.
 

@@ -1,9 +1,9 @@
 ---
-title: "ETC3550/ETC5550 Applied&nbsp;forecasting"
+title: "Time Series & Forecasting"
 author: "Ch1. Getting started"
-date: "OTexts.org/fpp3/"
+date: \today
 toc: true
-colortheme: monashwhite
+titlepage: titlepage-ie.jpg
 output:
   binb::monash:
     fig_width: 7
@@ -90,10 +90,10 @@ melsyd <- tsibbledata::ansett %>%
  5. Google stock price in 6 months time
  6. maximum temperature tomorrow
  7. exchange rate of \$US/AUS next week
- 8. total sales of drugs in Australian pharmacies next month
+ 8. total sales of drugs in pharmacies next month
 
 \only<2>{\begin{alertblock}{}\Large\bfseries\sffamily
-https://pollev.com/robjhyndman
+https://pollev.com/danielmateos767
 \end{alertblock}}
 
 \only<3>{\begin{block}{}\begin{itemize}\tightlist
@@ -165,152 +165,6 @@ p +
 
 \vspace*{10cm}
 
-# Some case studies
-
-## CASE STUDY 1: Paperware company
-
-\fontsize{11.5}{13}\sf
-
-\begin{textblock}{7.6}(0.2,1.5)
-\textbf{Problem:} Want forecasts of each of hundreds of
-items. Series can be stationary, trended or seasonal. They currently
-have a large forecasting program written in-house but it doesn't seem
-to produce sensible forecasts. They want me to tell them what is
-wrong and fix it.
-
-\vspace*{0.cm}
-
-\textbf{Additional information}\vspace*{-0.2cm}\fontsize{11.5}{13}\sf
-\begin{itemize}\itemsep=0cm\parskip=0cm
-\item  Program  written in COBOL making numerical calculations limited. It is not possible to do any optimisation.
-\item Their programmer has little experience in numerical computing.
-\item They employ no statisticians and want the program to produce forecasts \rlap{automatically.}
-\end{itemize}
-\end{textblock}
-
-\placefig{8}{1.4}{width=4.8cm}{tableware2}
-
-
-## CASE STUDY 1: Paperware company
-
-### Methods currently used
-
-A
-: 12 month average
-
-C
-: 6 month average
-
-E
-: straight line regression over last 12 months
-
-G
-: straight line regression over last 6 months
-
-H
-: average slope between last year's and this year's values.
-  (Equivalent to differencing at lag 12 and taking mean.)
-
-I
-: Same as H except over 6 months.
-
-K
-: I couldn't understand the explanation.
-
-## CASE STUDY 2: PBS
-
-\fullwidth{pills}
-
-
-## CASE STUDY 2: PBS
-
-### The Pharmaceutical Benefits Scheme (PBS) is the Australian government drugs subsidy scheme.
-
-  * Many drugs bought from pharmacies are subsidised to allow more equitable access to modern drugs.
-  * The cost to government is determined by the number and types of drugs purchased. Currently nearly 1\% of GDP.
-  * The total cost is budgeted based on forecasts of drug usage.
-
-## CASE STUDY 2: PBS
-
-\fullheight{pbs2}
-
-## CASE STUDY 2: PBS
-
-  * In 2001: \$4.5 billion budget, under-forecasted by \$800 million.
-  * Thousands of products. Seasonal demand.
-  * Subject to covert marketing, volatile products, uncontrollable expenditure.
-  * Although monthly data available for 10 years, data are aggregated to annual values, and only the first three years are used in estimating the forecasts.
-  * All forecasts being done with the \texttt{FORECAST} function in MS-Excel!
-
-
-## CASE STUDY 3: Car fleet company
-
-**Client:** One of Australia's largest car fleet companies
-
-**Problem:** how to forecast resale value of vehicles? How
-should this affect leasing and sales policies?
-
-\pause
-
-### Additional information
- - They can provide a large amount of data on previous vehicles and their eventual resale values.
- - The resale values are currently estimated by a group of specialists. They see me as a threat and do not cooperate.
-
-
-
-## CASE STUDY 4: Airline
-
-\fullwidth{ansettlogo}
-
-
-## CASE STUDY 4: Airline
-
-```{r, echo=FALSE, fig.height=5}
-melsyd %>%
-  filter(Class == "Economy") %>%
-  autoplot(Passengers) +
-  labs(
-    title = "Economy class passengers",
-    subtitle = "Melbourne-Sydney",
-    x = "Year",
-    y = "Thousands"
-  )
-```
-
-
-## CASE STUDY 4: Airline
-
-```{r, echo=FALSE, fig.height=5}
-melsyd %>%
-  filter(Class == "Economy") %>%
-  autoplot(Passengers) +
-  labs(
-    title = "Economy class passengers",
-    subtitle = "Melbourne-Sydney",
-    y = "Thousands"
-  )
-```
-
-\begin{textblock}{4.2}(7,6.3)
-\begin{alertblock}{}
-Not the real data! Or is it?
-\end{alertblock}
-\end{textblock}
-
-
-
-## CASE STUDY 4: Airline
-
-**Problem:** how to forecast passenger traffic on major routes?
-
-### Additional information
-
-  * They can provide a large amount of data on previous routes.
-  * Traffic is affected by school holidays, special events such as
-the Grand Prix, advertising campaigns, competition behaviour, etc.
-  * They have a highly capable team of people who are able to do
-most of the computing.
-
 
 # The statistical forecasting perspective
 
@@ -368,42 +222,3 @@ aligned_plots[[2]]
 - $\hat{y}_{T+h|T} =\text{E}[y_{T+h} | y_1,\dots,y_T]$ (an $h$-step forecast taking account of all observations up to time $T$).
 
 
-# Assignment 1
-
-## Assignment 1: forecast the following series
-\small
-
-  1. Google closing stock price on 22 March 2021.
-  2. Maximum temperature at Melbourne airport on 12 April 2021.
-  3. The difference in points (Collingwood minus Essendon) scored in the AFL match between Collingwood and Essendon for the Anzac Day clash. 25 April 2021.
-  4. The trend estimate of total employment for April 2021. ABS CAT 6202, to be released around mid May 2021.
-  5. Google closing stock price on 24 May 2021.
-
-\begin{block}{}
-For each of these, give a point forecast and an 80\% prediction interval.
-\end{block}\pause
-\begin{alertblock}{}
-Prize: \$50 Amazon gift voucher
-\end{alertblock}
-
-## Assignment 1: scoring
-\small
-
-$Y=$ actual, $F=$ point forecast, $[L,U]=$ prediction interval
-
-### Point forecasts:
-
-$$\text{Absolute Error} = |Y-F|
-$$
-
- * Rank results for all students in class
- * Add ranks across all five items
-
-### Prediction intervals:
-
-$$
-\text{Interval Score} = (U - L) + 10(L - Y)_+ + 10 (Y-U)_+
-$$
-
- * Rank results for all students
- * Add ranks across all five items
