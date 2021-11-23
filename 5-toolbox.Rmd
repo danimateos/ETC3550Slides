@@ -1,9 +1,9 @@
 ---
-title: "ETC3550/ETC5550 Applied&nbsp;forecasting"
+title: "Time Series & Forecasting"
 author: "Ch5. The forecasters' toolbox"
-date: "OTexts.org/fpp3/"
+date: \today
 toc: true
-colortheme: monashwhite
+titlepage: titlepage-ie.jpg
 output:
   binb::monash:
     fig_width: 7
@@ -154,6 +154,18 @@ fit %>% forecast(h = "3 years") %>%
   filter(Country=="Sweden") %>%
   autoplot(gdppc) +
     labs(title = "GDP per capita for Sweden", y = "$US")
+```
+
+## Your turn 
+
+* Fit a time series linear model like the one we just used to the stock market prices dataset (the `Close` variable in `gafa_stock`). Remember that these data don't have a regular index. 
+
+* Using that model, forecast for the next 120 days and visualize both the forecast and past.
+
+```{r eval=FALSE, include=FALSE}
+stock_reindexed = gafa_stock %>% group_by(Symbol) %>% mutate(row = row_number()) %>% update_tsibble(index = row, regular = TRUE) 
+
+stock_reindexed %>% model(tslm = TSLM(Close ~ trend())) %>% forecast(h=120) %>% autoplot(stock_reindexed)
 ```
 
 # Some simple forecasting methods
@@ -471,6 +483,8 @@ gg_tsresiduals(fit)
 
   * We *expect* these to look like white noise.
 
+<!--
+
 ## Portmanteau tests
 
 Consider a *whole set* of $r_{k}$  values, and develop a test to see whether the set is significantly different from a zero set.\pause
@@ -512,6 +526,7 @@ where $\ell$  is max lag being considered and $T$ is number of observations.
 augment(fit) %>%
   features(.resid, ljung_box, lag=10, dof=0)
 ```
+-->
 
 <!-- ## Your turn
 
@@ -539,6 +554,22 @@ gg_tsresiduals(fit)
 \fontsize{14}{15}\sf
 
 What do you conclude? -->
+
+## Your turn
+\fontsize{12}{14}\sf
+
+* Compute naïve, seasonal naïve, mean and drift-method forecasts for quarterly Australian Cement production. Use only data before 2005 for the training.
+
+* Examine the residuals for each of these methods. What do you conclude?
+
+* Use those models to forecast the last 5 years of data and plot the forecasts together with the real data. How does what you see connect with the conclusions you extracted from the residuals plot?
+
+```{r eval=FALSE, include=FALSE}
+aus_production %>% filter(year(Quarter) < 2005) %>% model(mean = MEAN(Cement), naive = NAIVE(Cement), snaive = SNAIVE(Cement), drift = RW(Cement ~ drift())) -> fits
+
+fits %>% forecast(h="5 years") %>% autoplot(aus_production)
+```
+
 
 # Distributional forecasts and prediction intervals
 
@@ -662,6 +693,8 @@ $$f(X) = f(\mu) + (X-\mu)f'(\mu) + \frac{1}{2}(X-\mu)^2f''(\mu).$$\pause
 \centerline{$\E[Y] = \E[f(X)] = f(\mu) + \frac12 \sigma^2 f''(\mu)$}
 \end{alertblock}
 
+<!--
+
 ## Bias adjustment
 
 \fontsize{13}{15}\sf
@@ -687,6 +720,7 @@ f''(x) &= \begin{cases}
  (\lambda \mu + 1)^{1/\lambda}\left[1+\frac{\sigma^2(1-\lambda)}{2(\lambda\mu+1)^2}\right] & \quad\lambda\ne0.
  \end{cases}$}
 \end{alertblock}
+-->
 
 ## Bias adjustment
 \fontsize{9}{9}\sf
@@ -774,6 +808,35 @@ us_retail_employment %>%
  * A seasonal naive method is used by default for the `seasonal` components.
  * The variances from both the seasonally adjusted and seasonal forecasts are combined.
 
+## Your turn
+
+* Fit a decomposition model to the Cement data from `aus_production`, again only training with the data prior to 2005.
+
+* Plot the forecasts for the following five years from this model and the best performing model from the earlier exercise
+
+```{r}
+aus_production %>% 
+  filter(year(Quarter) < 2005) %>% 
+  model(drift = RW(Cement ~ drift()),
+        decomp = decomposition_model(STL(Cement),
+                                     RW(season_adjust ~ drift())
+        )) -> fits
+fits %>% forecast(h="5 years") %>% autoplot(aus_production)
+```
+
+
+```{r}
+aus_production %>% 
+  filter(year(Quarter) < 2005) %>% 
+  model(drift = RW(Cement ~ drift()),
+        decomp = decomposition_model(STL(Cement),
+                                     RW(season_adjust ~ drift())
+        )) -> fits
+
+fits %>% forecast(h="5 years") %>% autoplot(aus_production)
+```
+
+
 # Evaluating forecast accuracy
 
 ## Training and test sets
@@ -848,41 +911,6 @@ $e_{T+h} =$  & $y_{T+h} - \pred{y}{T+h}{T}$
   * MAE, MSE, RMSE are all scale dependent.
   * MAPE is scale independent but is only sensible if $y_t\gg 0$ for all $t$, and $y$ has a natural zero.
 
-## Measures of forecast accuracy
-
-\begin{block}{Mean Absolute Scaled Error}
-$$
-\text{MASE} = \text{mean}(|e_{T+h}|/Q)
-$$
-where $Q$ is a stable measure of the scale of the time series $\{y_t\}$.
-\end{block}
-Proposed by Hyndman and Koehler (IJF, 2006).
-
-For non-seasonal time series,
-$$
-  Q = (T-1)^{-1}\sum_{t=2}^T |y_t-y_{t-1}|
-$$
-works well. Then MASE is equivalent to MAE relative to a naïve method.
-
-\vspace*{10cm}
-
-## Measures of forecast accuracy
-
-\begin{block}{Mean Absolute Scaled Error}
-$$
-\text{MASE} = \text{mean}(|e_{T+h}|/Q)
-$$
-where $Q$ is a stable measure of the scale of the time series $\{y_t\}$.
-\end{block}
-Proposed by Hyndman and Koehler (IJF, 2006).
-
-For seasonal time series,
-$$
-  Q = (T-m)^{-1}\sum_{t=m+1}^T |y_t-y_{t-m}|
-$$
-works well. Then MASE is equivalent to MAE relative to a seasonal naïve method.
-
-\vspace*{10cm}
 
 ## Measures of forecast accuracy
 
@@ -922,7 +950,7 @@ accuracy(beer_fit)
 ```{r beer-train-table, echo=FALSE}
 accuracy(beer_fit) %>%
   arrange(.model) %>%
-  select(.model, .type, RMSE, MAE, MAPE, MASE)
+  select(.model, .type, RMSE, MAE, MAPE)
 ```
 
 \fontsize{11}{11}\sf
@@ -936,7 +964,7 @@ accuracy(beer_fc, recent_production)
 ```{r beer-test-table, echo=FALSE}
 accuracy(beer_fc, recent_production) %>%
   arrange(.model) %>%
-  select(.model, .type, RMSE, MAE, MAPE, MASE)
+  select(.model, .type, RMSE, MAE, MAPE)
 ```
 
 \vspace*{10cm}

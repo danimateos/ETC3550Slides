@@ -1,0 +1,60 @@
+---
+title: "Moving Averages"
+author: "Daniel Mateos San Martín"
+date: "10/27/2021"
+output: html_document
+---
+
+
+# Moving averages
+
+
+## Moving average of order m
+
+$$\hat T_t = \frac{1}{m} \sum_{j=-k}^{k}y_{t+j}$$ 
+
+
+
+## Example with `us_employment`
+
+
+```{r}
+
+```
+
+
+## How does this in estimating the trend-cycle and seasonal component?
+
+```{r}
+
+```
+
+
+
+### Choosing the right _m_ is important
+
+```{r}
+
+```
+
+
+
+## Use of moving averages in classical decomposition
+
+
+```{r}
+
+
+```
+
+
+## Use of moving averages in the stock market
+
+"Technical analysis"
+
+```{r}
+
+```
+
+
+

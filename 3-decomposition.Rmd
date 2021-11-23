@@ -96,9 +96,9 @@ print_retail %>%
 ## Your turn
 \fontsize{11}{13}\sf
 
-* `aus_retail` contains data in $million AUD. Apply to the series `"Cafes, restaurants and catering services"` an inflation adjustment to see how the PPP spending has increased. Plot the resulting series (one line for all of Australia)
+* `aus_retail` contains data in $million AUD. Apply to the series `"Cafes, restaurants and catering services"` an inflation adjustment to see how the real (as opposed to nominal) spending has increased. Plot the resulting series (one line for all of Australia)
 
-* In those years, the Australian population has increased. Join the Australian population data from `global_economy` and calculate the PPP-adjusted spending per capita in `"Cafes, restaurants and catering services"` and `"Takeaway food services"`. 
+* In those years, the Australian population has increased. Join the Australian population data from `global_economy` and calculate the real (as opposed to nominal) adjusted spending per capita in `"Cafes, restaurants and catering services"` and `"Takeaway food services"`. 
 
 <!--
 
@@ -195,14 +195,13 @@ food %>% autoplot(-1/Turnover) +
 * What's the difference between the latest value and the first value? What does it mean?
 
 <!-- 
-
 ```{r}
 global_economy %>%
   filter(Code=="USA") %>% 
   autoplot(log10(GDP))
 ```
-
 -->
+
 ## Box-Cox transformations
 
 Each of these transformations is close to a member of the
@@ -267,11 +266,16 @@ food %>% autoplot(box_cox(Turnover, 0.0524)) +
 * Choosing logs is a simple way to force forecasts to be positive
 * Transformations must be reversed to obtain forecasts on the original scale. (Handled automatically by `fable`.)
 
-### Your turn
+## Your turn
+\fontsize{11}{13}\sf
 
 * Play around with the lambda slider at [https://otexts.com/fpp3/transformations.html](https://otexts.com/fpp3/transformations.html) (near the bottom; you can search for "slider"). 
   * How does the behavior of the transformation change between between very negative values of lambda and and very high positive values?
   * What value represents the cutoff between these two behaviors?
+
+
+## Your turn
+\fontsize{11}{13}\sf
 
 * Create the variable `a10_spending` that reflects the total spending in diabetic drugs (ATC2 "A10") from the `PBS` dataset. 
   * Plot it. Do you think it needs a transformation? Which one of the ones we saw earlier (square, inverse, log) looks better intuitively?
@@ -290,6 +294,78 @@ food %>% autoplot(box_cox(Turnover, 0.0524)) +
 
 2. Why is a Box-Cox transformation unhelpful for the `canadian_gas` data?
  -->
+
+# Moving averages
+
+## Moving average of order m
+
+$$\hat T_t = \frac{1}{m} \sum_{j=-k}^{k}y_{t+j}$$ 
+
+
+## Moving averages in R
+\fontsize{9}{10}\sf
+
+The longer the period we average, the smoother the line.
+
+```{r}
+smoothed = us_employment %>% 
+  filter(Title=="Total Private", year(Month) > 2000) %>% 
+  mutate(`5-MA` = slider::slide_dbl(Employed, mean, .before=2, .after=2),
+         `12-MA` = slider::slide_dbl(Employed, mean, .before=6, .after=5),
+         `15-MA` = slider::slide_dbl(Employed, mean, .before=7, .after=7)) %>%
+  mutate(`5x5-MA` = slider::slide_dbl(`5-MA`, mean, .before=2, .after=2),
+         `12x12-MA` = slider::slide_dbl(`15-MA`, mean, .before=5, .after=6))
+```
+
+## Moving averages in R
+\fontsize{9}{10}\sf
+
+```{r}
+smoothed %>% 
+  autoplot(Employed) + 
+    geom_line(aes(y=`5-MA`), color='red') + 
+    geom_line(aes(y=`12-MA`), color='blue') +
+    geom_line(aes(y=`15-MA`), color='green')
+```
+
+
+## Moving averages of moving averages
+\fontsize{9}{10}\sf
+
+Compare the 12x12-MA with the 12-MA:
+
+```{r}
+smoothed %>% 
+  autoplot(Employed) + 
+    geom_line(aes(y=`15-MA`), color='red') + 
+    geom_line(aes(y=`12x12-MA`), color='blue') + 
+    geom_line(aes(y=`12-MA`), color='green') 
+
+```
+
+## Moving averages with stock market data
+\fontsize{9}{10}\sf
+
+```{r}
+goog_ma = gafa_stock %>% 
+  filter(Symbol=="GOOG") %>%
+  mutate(`10-MA` = slider::slide_dbl(Close, .before=10, mean),
+         `50-MA` = slider::slide_dbl(Close, .before=50, mean),
+         `200-MA` = slider::slide_dbl(Close, .before=200, mean)) 
+
+```
+
+## Moving averages with stock market data
+\fontsize{9}{10}\sf
+
+```{r}
+goog_ma %>%
+  autoplot(Close) + 
+    geom_line(aes(y=`10-MA`), color="red", linetype="dashed") +
+    geom_line(aes(y=`50-MA`), color="blue", linetype="dashed") +
+    geom_line(aes(y=`200-MA`), color="green")
+```
+
 
 # Time series components
 
@@ -595,6 +671,7 @@ us_retail_employment %>%
 
 
 ## Your turn
+\fontsize{11}{12}\sf
 
 * Let's play around with the `vic_elec` dataset. Group it by day and average `Demand` so that we can ignore the intraday seasonality. Keep only the year 2014.
 
@@ -604,7 +681,8 @@ us_retail_employment %>%
   * Which value makes the trend more/less wiggly? 
   * Which one makes the seasonal component change faster/slower? 
   * Wich combination minimizes the values left in the remainder without producing absurdly looking trend/seasons?
-  
+
+<!--
 ```{r}
 daily = vic_elec %>% 
   as_tibble() %>% 
@@ -619,4 +697,9 @@ daily %>%
   components() %>% 
   autoplot
 ```
+-->
 
+<!--
+https://stats.stackexchange.com/questions/253917/why-use-differencing-and-box-cox-in-time-series
+https://en.wikipedia.org/wiki/Variance-stabilizing_transformation
+-->

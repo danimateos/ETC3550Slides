@@ -1,0 +1,60 @@
+---
+title: '2021-09-16'
+author: "Daniel Mateos San Martín"
+date: "9/16/2021"
+output: html_document
+---
+
+
+# Chapter 3 - Time Series
+
+
+```{r}
+library(fpp3)
+library(tidyverse)
+```
+
+## Tsibbles
+
+```{r}
+global_economy
+```
+
+
+## Time functions
+
+
+```{r}
+lubridate::ymd("20210906")
+day(lubridate::ymd("20210906"))
+days_in_month(ymd("20210901")) # I can do date-y things with it now
+```
+
+
+ISO 8601: "yyyy-mm-dd"
+
+```{r}
+dmy('16092021')
+```
+
+
+
+## Example: prison population
+
+```{r}
+prison = readr::read_csv("data/prison_population.csv") %>%
+  as_tsibble(index = date, key = c(state, gender, legal, indigenous))
+
+prison %>% 
+  filter(state=="ACT", legal=="Sentenced", indigenous=="ATSI") %>%
+  autoplot()
+```
+
+## PBS
+
+```{r}
+PBS %>% filter(ATC2 == "A10")%>% autoplot(Cost)
+```
+
+
+
